@@ -6,6 +6,7 @@ Das Plugin erstellt am 01. eines jeden Monats eine Liste von allen Accounts, wo 
 * alle Charaktere zu einem User werden aufgelistet und man kann sie über einen Account verwalten
 * werden einsortiert in "Bleibt" und "Geht"
 * automatischen Zurücksetzten am 01.MM. um 0 Uhr
+* es wird automatisch ein Profilfeld "Whitelist" mit den richtigen Einstellungen erstellt, was automatisch in den Einstellung als fid hinterlegt ist
 * abwesende Charaktere werden gesondert gelistet und müssen sich nicht zurückmelden
 * Charaktere, die auf Eis liegen, werden gesondert gelistet und müssen sich nicht zurückmelden (falls aktiviert)
 * Bewerber können von der Liste ausgeschlossen werden
