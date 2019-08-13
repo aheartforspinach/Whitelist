@@ -3,12 +3,13 @@ Das Plugin erstellt am 01. eines jeden Monats eine Liste von allen Accounts, wo 
 
 
 ## Funktionen
-* alle Charaktere zu einem User werden aufgelistet und man kann sie über einem Account verwalten
+* alle Charaktere zu einem User werden aufgelistet und man kann sie über einen Account verwalten
 * werden einsortiert in "Bleibt" und "Geht"
 * automatischen Zurücksetzten am 01.MM. um 0 Uhr
 * abwesende Charaktere werden gesondert gelistet und müssen sich nicht zurückmelden
-* Charaktere, die auf Eis liegen werden gesondert gelistet und müssen sich nicht zurückmelden
+* Charaktere, die auf Eis liegen, werden gesondert gelistet und müssen sich nicht zurückmelden (falls aktiviert)
 * Bewerber können von der Liste ausgeschlossen werden
+* es ist einstellbar, dass man nur seine eigenen Charaktere auf der Liste sieht
 * nach einem gewissen Datum kann man sich nicht mehr zurückmelden
 * man kann seinen Charakter nur auf "Bleibt" setzten, wenn er in den letzten x Monaten/Wochen einen Post geschrieben hat (optional)
 * Hinweisbanner erscheint (wegklickbar)
