@@ -13,6 +13,10 @@ $day = date("j", time());
 $thisMonth = date("m.Y", time());
 $allowedUsers = array();
 
+if ($mybb->settings['whitelist_guest'] == "0" && $mybb->user['uid'] == 0){
+    error_no_permission();
+}
+
 //Einstellungen holen
 if ($mybb->settings['whitelist_ice'] == "-1") {
     $fidIceDB = "";

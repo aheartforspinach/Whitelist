@@ -60,75 +60,82 @@ Geht',
     $gid = $db->insert_query("settinggroups", $setting_group);
 
     $setting_array = array(
+        'whitelist_guest' => array(
+            'title' => 'Sichtbarkeit',
+            'description' => 'Sollen Gäste die Whitelist sehen können?',
+            'optionscode' => 'yesno',
+            'value' => 1, // Default
+            'disporder' => 1
+        ),
         'whitelist_applicant' => array(
             'title' => 'Auflistung Bewerber',
             'description' => 'Sollen Bewerber sich auch zurückmelden können?',
             'optionscode' => 'yesno',
             'value' => 0, // Default
-            'disporder' => 1
+            'disporder' => 2
         ),
         'whitelist_showUser' => array(
             'title' => 'User verstecken',
             'description' => 'Sollen User nur ihre eigenen Charaktere auf der BL sehen? Falls nein, sehen User alle Charaktere und nicht nur ihre',
             'optionscode' => 'yesno',
             'value' => 0, // Default
-            'disporder' => 1
+            'disporder' => 3
         ),
         'whitelist_teamaccs' => array(
             'title' => 'Teamaccount',
             'description' => 'Gib hier mit Komma getrennt die UIDs von den Accounts an, die NICHT gelistet werden sollen. Falls alle gelistet werden sollen, gib -1 ein',
             'optionscode' => 'text',
             'value' => '998, 999', // Default
-            'disporder' => 2
+            'disporder' => 4
         ),
         'whitelist_fid' => array(
             'title' => 'Whitelist Profilfeld',
             'description' => 'Das Profilfeld für Whitelist würde automatisch angelegt. Falls die Zahl falsch sein sollte, kannst du sie hier ändern.',
             'optionscode' => 'text',
             'value' => $newFidNr, // Default
-            'disporder' => 3
+            'disporder' => 5
         ),
         'whitelist_ice' => array(
             'title' => 'Auf Eis Profilfeld',
             'description' => 'Gib hier die ID von deinem Profilfeld ein, ob der Charakter auf Eis ist. -1 bedeutet, dass du dieses Profilfeld nicht nutzt',
             'optionscode' => 'text',
             'value' => '-1', // Default
-            'disporder' => 4
+            'disporder' => 6
         ),
         'whitelist_player' => array(
             'title' => 'Spieler Profilfeld',
             'description' => 'Gib hier die ID von deinem Profilfeld ein, wo man den Spielernamen einträgt',
             'optionscode' => 'text',
             'value' => '-1', // Default
-            'disporder' => 5
+            'disporder' => 7
         ),
         'whitelist_inplay' => array(
             'title' => 'Inplaykategorie',
             'description' => 'Gib hier die ID von der Inplaykategorie ein.',
             'optionscode' => 'text',
             'value' => '-1', // Default
-            'disporder' => 6
+            'disporder' => 8
         ),
         'whitelist_archive' => array(
             'title' => 'Archivkategorie',
             'description' => 'Gib hier die ID von der Archivkategorie ein.',
             'optionscode' => 'text',
             'value' => '-1', // Default
-            'disporder' => 7
+            'disporder' => 9
         ),
         'whitelist_echo' => array(
             'title' => 'Rückmeldezeitraum',
             'description' => 'Bis zu welchen Tag darf man sich zurückmelden? (Hinweis: bis zu diesem Tag wird auch der Hinweis auf dem Index angezeigt)',
             'optionscode' => 'text',
             'value' => '7', // Default
-            'disporder' => 9
+            'disporder' => 10
         ),
         'whitelist_post' => array(
             'title' => 'Mindestpostzahl',
             'description' => 'Falls in den letzten x Monaten ein Post erfolgt haben muss, trage hier z.B. eine 2 ein, wenn man in den letzten zwei Monaten mind. einen Post geschrieben haben musst. -1 falls so etwas nicht gewünscht ist',
             'optionscode' => 'text',
             'value' => '1', // Default
-            'disporder' => 10
+            'disporder' => 11
         ),
     );
 
@@ -342,7 +349,7 @@ function whitelist_is_installed(){
 
 function whitelist_uninstall(){
     global $db;
-$db->delete_query('settings', "name IN('whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo')");
+$db->delete_query('settings', "name IN('whitelist_guest','whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo')");
     $db->delete_query('settinggroups', "name = 'whitelist'");
     $db->delete_query("templates", "title IN('whitelist', 'whitelistIce', 'whitelistUser', 'whitelistCharacters', 'whitelistHeader')");
     $db->query("ALTER TABLE ".TABLE_PREFIX."users DROP hasSeenWhitelist");
