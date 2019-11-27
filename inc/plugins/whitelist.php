@@ -130,12 +130,19 @@ Geht',
             'value' => '7', // Default
             'disporder' => 10
         ),
+        'whitelist_dayBegin' => array(
+            'title' => 'Veröffentlichungsdatum',
+            'description' => 'An welchem Tag soll die Whitelist veröffentlicht werden?',
+            'optionscode' => 'text',
+            'value' => '1', // Default
+            'disporder' => 11
+        ),
         'whitelist_post' => array(
             'title' => 'Mindestpostzahl',
             'description' => 'Falls in den letzten x Monaten ein Post erfolgt haben muss, trage hier z.B. eine 2 ein, wenn man in den letzten zwei Monaten mind. einen Post geschrieben haben musst. -1 falls so etwas nicht gewünscht ist',
             'optionscode' => 'text',
             'value' => '1', // Default
-            'disporder' => 11
+            'disporder' => 12
         ),
     );
 
@@ -340,8 +347,8 @@ Geht',
 }
 
 function whitelist_is_installed(){
-  global $db, $mybb;
-	if(isset($mybb->settings['whitelist_applicant'])) {
+  global $db;
+	if($db->field_exists('hasSeenWhitelist', 'users')) {
 			return true;
 	}
 	return false;
@@ -349,7 +356,7 @@ function whitelist_is_installed(){
 
 function whitelist_uninstall(){
     global $db;
-$db->delete_query('settings', "name IN('whitelist_guest','whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo')");
+$db->delete_query('settings', "name IN('whitelist_guest','whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo', 'whitelist_dayBegin')");
     $db->delete_query('settinggroups', "name = 'whitelist'");
     $db->delete_query("templates", "title IN('whitelist', 'whitelistIce', 'whitelistUser', 'whitelistCharacters', 'whitelistHeader')");
     $db->query("ALTER TABLE ".TABLE_PREFIX."users DROP hasSeenWhitelist");
@@ -383,11 +390,12 @@ $plugins->add_hook('global_intermediate', 'whitelist_alert');
 function whitelist_alert(){
     global $db, $mybb, $templates, $header_whitelist; 
 
+    $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
     $alertDays = intval($mybb->settings['whitelist_echo']); 
     $fidWhitelist = intval($mybb->settings['whitelist_fid']); 
     $email = $mybb->user['email'];
     
-    if(date("j", time()) == 1 && date("H:i:s", time()) == '00:00:00'){
+    if(date("j", time()) == $dayBegin && date("H:i:s", time()) == '00:00:00'){
         $db->query("UPDATE ".TABLE_PREFIX."users SET hasSeenWhitelist = 0");
         $db->query("UPDATE ".TABLE_PREFIX."userfields SET fid". $fidWhitelist ." = 'Geht'");
     }
@@ -413,7 +421,7 @@ function whitelist_alert(){
             $noEcho = "Du hast dich noch nicht zurückgemeldet.";
         }
     }
-    if(date("j", time()) <= $alertDays && $alertDays != -1 && $mybb->user['uid'] != 0 && !$dontSee){
+    if(date("j", time()) <= ($alertDays + $dayBegin) && $alertDays != -1 && $mybb->user['uid'] != 0 && !$dontSee){
         eval("\$header_whitelist .= \"".$templates->get("whitelistHeader")."\";");
     }
 }

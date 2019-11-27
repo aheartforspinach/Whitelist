@@ -13,7 +13,7 @@ $day = date("j", time());
 $thisMonth = date("m.Y", time());
 $allowedUsers = array();
 
-if ($mybb->settings['whitelist_guest'] == "0" && $mybb->user['uid'] == 0){
+if ($mybb->settings['whitelist_guest'] == "0" && $mybb->user['uid'] == 0) {
     error_no_permission();
 }
 
@@ -30,6 +30,7 @@ $fidInplay = intval($mybb->settings['whitelist_inplay']);
 $fidArchive = intval($mybb->settings['whitelist_archive']);
 $dayEcho = intval($mybb->settings['whitelist_echo']);
 $month = intval($mybb->settings['whitelist_post']);
+$dayBegin = intval($mybb->settings['whitelist_dayBegin']);
 if ($mybb->settings['whitelist_applicant'] == "1") {
     $applicant = -1;
 } else {
@@ -58,13 +59,12 @@ if ($fidPlayer == -1 || $fidArchive == -1 || $fidInplay == -1) {
 if ($month != -1) {
     $lastIPPosts = $db->query("SELECT uid, dateline, name
     FROM " . TABLE_PREFIX . "posts p JOIN " . TABLE_PREFIX . "forums f ON f.fid = p.fid
-    WHERE f.parentlist LIKE '" . $fidInplay . ",%' OR f.parentlist LIKE '%" . $fidArchive . "%'"); //" . $fidArchive . "
+    WHERE find_in_set(". $fidInplay .", parentlist) or find_in_set(". $fidArchive .", parentlist)"); 
     while ($lastIPPost = $db->fetch_array($lastIPPosts)) {
-        if (!isOlderThanOneMonth($lastIPPost['dateline']))
+        if (!isOlderThanOneMonth($lastIPPost['dateline']) && !in_array($lastIPPost['uid'], $allowedUsers))
             array_push($allowedUsers, $lastIPPost['uid']);
     }
 }
-
 
 //Post-Request auslesen
 $countCharacters = 0;
@@ -91,11 +91,10 @@ while ($ownCharacter = $db->fetch_array($ownCharacters)) {
         $checkedGo = "checked";
         $checkedStay = "";
     }
-    if ($month != -1 || $ownCharacter['usergroup'] == $applicant) {
-        if (!in_array($ownCharacter['uid'], $allowedUsers) || $day > $dayEcho || $ownCharacter['usergroup'] == $applicant) {
-            $checkedGo .= " disabled";
-            $checkedStay .= " disabled";
-        }
+
+    if (($month != -1 && !in_array($ownCharacter['uid'], $allowedUsers)) || $day > ($dayEcho + $dayBegin) || $ownCharacter['usergroup'] == $applicant) {
+        $checkedGo .= " disabled";
+        $checkedStay .= " disabled";
     }
 
     $userlink = build_profile_link(format_name($ownCharacter['username'], $ownCharacter['usergroup'], $ownCharacter['displaygroup']), $ownCharacter['uid']);
@@ -134,10 +133,9 @@ while ($user = $db->fetch_array($users)) {
 
 function isOlderThanOneMonth($dateToTest)
 {
-    global $month;
+    global $month, $dayBegin;
     $oneMonthAgo = strtotime("-" . $month . " month");
-    $firstOneMonthAgo = "01." . date("m.Y", $oneMonthAgo);
-
+    $firstOneMonthAgo = $dayBegin . '.' . date("m.Y", $oneMonthAgo);
     $UnixFirstOneMonthAgo = strtotime($firstOneMonthAgo);
     if ($dateToTest > $UnixFirstOneMonthAgo) {
         return false;
@@ -145,9 +143,9 @@ function isOlderThanOneMonth($dateToTest)
         return true;
     }
 }
-if ($mybb->settings['whitelist_ice'] == "-1"){// Ice ist nicht aktiviert
+if ($mybb->settings['whitelist_ice'] == "-1") { // Ice ist nicht aktiviert
     eval("\$page = \"" . $templates->get("whitelist") . "\";");
-}else{
+} else {
     eval("\$page = \"" . $templates->get("whitelistIce") . "\";");
 }
 output_page($page);
