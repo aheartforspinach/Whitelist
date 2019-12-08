@@ -21,10 +21,25 @@ function whitelist_install(){
     global $db, $cache, $mybb;
 
     $db->write_query("ALTER TABLE ".TABLE_PREFIX."users ADD hasSeenWhitelist INT(1) NOT NULL DEFAULT '0';");
+    
+    $date = new DateTime('01.'. date("m.Y", strtotime('+1 month')));
+    $date->setTime(1,0,0); 
+    $whitelistTask = array(
+        'title' => 'Whitelist Reset', 
+        'description' => 'Automatically resets all fields from the whitelist plugin',
+        'file' => 'whitelist',
+        'minute' => 0,
+        'hour' => 0,
+        'day' => 1,
+        'month' => '*',
+        'weekday' => '*',
+        'nextrun' => $date->getTimestamp(),
+        'logging' => 1,
+        'locked' => 0);
+    $db->insert_query('tasks', $whitelistTask);
 
     $disporder = 0;
-    $highestDisporder = $db->query("SELECT disporder
-    FROM ".TABLE_PREFIX."profilefields");
+    $highestDisporder = $db->simple_select('profilefields', 'disporder');
 
     while ($highetsDisporder=$db->fetch_array($highestDisporder)){
         if($disporder < $highetsDisporder['disporder']){
@@ -359,17 +374,16 @@ function whitelist_uninstall(){
 $db->delete_query('settings', "name IN('whitelist_guest','whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo', 'whitelist_dayBegin')");
     $db->delete_query('settinggroups', "name = 'whitelist'");
     $db->delete_query("templates", "title IN('whitelist', 'whitelistIce', 'whitelistUser', 'whitelistCharacters', 'whitelistHeader')");
-    $db->query("ALTER TABLE ".TABLE_PREFIX."users DROP hasSeenWhitelist");
-    $fids = $db->query("SELECT fid
-    FROM ".TABLE_PREFIX."profilefields 
-    WHERE name = 'Whitelist'");
-    $whitelistFid = "";
-    while($fid=$db->fetch_array($fids)) {
-        $whitelistFid = $fid['fid'];
-    }
+    if($db->field_exists('hasSeenWhitelist', 'users'))
+        $db->drop_column('users', 'hasSeenWhitelist');
+
+    $whitelistFid = $db->fetch_array($db->simple_select('profilefields', 'fid', 'name = "Whitelist"'))['fid'];
     $db->delete_query('profilefields', "name = 'Whitelist'");
-    $whitelistFid = "fid" .  $whitelistFid;
-    $db->query("ALTER TABLE ".TABLE_PREFIX."userfields DROP " . $whitelistFid . "");
+    $whitelistFid = 'fid' .  $whitelistFid;
+    if($db->field_exists($whitelistFid, 'userfields'))
+        $db->drop_column('userfields', $whitelistFid);
+
+    $db->delete_query('tasks', 'file = "whitelist"');
     rebuild_settings();
 }
 
@@ -394,11 +408,6 @@ function whitelist_alert(){
     $alertDays = intval($mybb->settings['whitelist_echo']); 
     $fidWhitelist = intval($mybb->settings['whitelist_fid']); 
     $email = $mybb->user['email'];
-    
-    if(date("j", time()) == $dayBegin && date("H:i:s", time()) == '00:00:00'){
-        $db->query("UPDATE ".TABLE_PREFIX."users SET hasSeenWhitelist = 0");
-        $db->query("UPDATE ".TABLE_PREFIX."userfields SET fid". $fidWhitelist ." = 'Geht'");
-    }
 
     if($_GET['seen'] == 1){
         $db->query("UPDATE ".TABLE_PREFIX."users SET hasSeenWhitelist = 1 WHERE email = '" . $email . "'");
