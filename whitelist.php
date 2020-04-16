@@ -4,7 +4,7 @@ require_once "global.php";
 
 add_breadcrumb("Whitelist", "whitelist.php");
 global $db, $templates, $mybb;
-$email = $mybb->user['email'];
+$email = $db->escape_string($mybb->user['email']);
 
 $username = "";
 $checkedStay = "";
@@ -68,11 +68,28 @@ if ($month != -1) {
 
 //Post-Request auslesen
 $countCharacters = 0;
+$allowedUserIDs = array();
+$allowedIDsGenerated = false;
 while (isset($_POST["uid" . $countCharacters])) {
+	// Beim aller ersten Durchlauf der Schleife werden die berechtigten UserAccounts geladen
+	if(!$allowedIDsGenerated)
+	{
+		$allowedIDsGenerated = true;
+		$allowedCharacters = $db->query("SELECT uid FROM " . TABLE_PREFIX . "users WHERE `email` = '" . $email . "'");
+		while ($allowedCharacter = $db->fetch_array($allowedCharacters)) {
+			$allowedUserIDs[] = (int)$allowedCharacter['uid'];
+		}
+	}
+	
+	// Übermittelte Daten verarbeiten
     if (isset($_POST["status" . $countCharacters])) {
-        $status = $_POST["status" . $countCharacters];
-        $uid = $_POST["uid" . $countCharacters];
-        $db->query("UPDATE " . TABLE_PREFIX . "userfields SET fid" . $fidWhitelist . "  = '$status' WHERE ufid = $uid ");
+        $status = $db->escape_string($_POST["status" . $countCharacters]);
+        $uid = intval($_POST["uid" . $countCharacters]);
+        
+        // Berechtigte UserID? Nur dann das DB Feld aktualisieren
+        if ( in_array($uid, $allowedUserIDs) ){
+	        $db->query("UPDATE " . TABLE_PREFIX . "userfields SET fid" . $fidWhitelist . "  = '$status' WHERE ufid = $uid ");
+		}
     }
     $countCharacters++;
 }

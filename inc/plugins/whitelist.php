@@ -60,6 +60,7 @@ Geht',
         'maxlength' => 0,
         'viewableby' => '3,4',
         'editableby' => '3,4',
+		'regex' => ''
     );
 
     $newFidNr = $db->insert_query("profilefields", $newPfWhitelist);
