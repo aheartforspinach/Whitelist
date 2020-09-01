@@ -26,8 +26,8 @@ if ($mybb->settings['whitelist_ice'] == "-1") {
 }
 $fidWhitelist = intval($mybb->settings['whitelist_fid']);
 $fidPlayer = intval($mybb->settings['whitelist_player']);
-$fidInplay = intval($mybb->settings['whitelist_inplay']);
-$fidArchive = intval($mybb->settings['whitelist_archive']);
+$fidsInplay = $mybb->settings['whitelist_inplay'];
+$fidArchive = $mybb->settings['whitelist_archive'];
 $dayEcho = intval($mybb->settings['whitelist_echo']);
 $month = intval($mybb->settings['whitelist_post']);
 $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
@@ -49,6 +49,7 @@ foreach ($accounts as $account) {
         $invisibleAccounts .= "XOR uid = " . $account . " ";
     }
 }
+$uids = getAllUids();
 
 if ($fidPlayer == -1 || $fidArchive == -1 || $fidInplay == -1) {
     die("Fülle bitte zuerst die Einstellungen im AdminCP aus. Es muss mind. die FID vom Spielernamenprofilfeld, die ID der Inplaykategorie und die ID der 
@@ -57,9 +58,9 @@ if ($fidPlayer == -1 || $fidArchive == -1 || $fidInplay == -1) {
 
 //User, die sich streichen dürfen
 if ($month != -1) {
-    $lastIPPosts = $db->query("SELECT uid, dateline, name
+    $lastIPPosts = $db->query("SELECT uid, dateline
     FROM " . TABLE_PREFIX . "posts p JOIN " . TABLE_PREFIX . "forums f ON f.fid = p.fid
-    WHERE find_in_set(". $fidInplay .", parentlist) or find_in_set(". $fidArchive .", parentlist)"); 
+    WHERE find_in_set(f.fid, '". $fidsInplay ."') or find_in_set(". $fidArchive .", parentlist)"); 
     while ($lastIPPost = $db->fetch_array($lastIPPosts)) {
         if (!isOlderThanOneMonth($lastIPPost['dateline']) && !in_array($lastIPPost['uid'], $allowedUsers))
             array_push($allowedUsers, $lastIPPost['uid']);
@@ -71,26 +72,26 @@ $countCharacters = 0;
 $allowedUserIDs = array();
 $allowedIDsGenerated = false;
 while (isset($_POST["uid" . $countCharacters])) {
-	// Beim aller ersten Durchlauf der Schleife werden die berechtigten UserAccounts geladen
+    	// Beim aller ersten Durchlauf der Schleife werden die berechtigten UserAccounts geladen
 	if(!$allowedIDsGenerated)
 	{
 		$allowedIDsGenerated = true;
-		$allowedCharacters = $db->query("SELECT uid FROM " . TABLE_PREFIX . "users WHERE `email` = '" . $email . "'");
+        // $allowedCharacters = $db->query("SELECT uid FROM " . TABLE_PREFIX . "users WHERE `email` = '" . $email . "'");
+        $allowedCharacters = $db->query("SELECT uid FROM " . TABLE_PREFIX . "users WHERE find_in_set(uid, '". $uids. "')");
 		while ($allowedCharacter = $db->fetch_array($allowedCharacters)) {
 			$allowedUserIDs[] = (int)$allowedCharacter['uid'];
 		}
 	}
-	
+
 	// Übermittelte Daten verarbeiten
     if (isset($_POST["status" . $countCharacters])) {
         $status = $db->escape_string($_POST["status" . $countCharacters]);
         $uid = intval($_POST["uid" . $countCharacters]);
-        
+
         // Berechtigte UserID? Nur dann das DB Feld aktualisieren
         if ( in_array($uid, $allowedUserIDs) ){
 	        $db->query("UPDATE " . TABLE_PREFIX . "userfields SET fid" . $fidWhitelist . "  = '$status' WHERE ufid = $uid ");
-		}
-    }
+		}}
     $countCharacters++;
 }
 
@@ -98,7 +99,7 @@ $countCharacters = 0;
 //Eigene Charaktere
 $ownCharacters = $db->query("SELECT username,usergroup,displaygroup,uid, fid" . $fidWhitelist . "
 FROM " . TABLE_PREFIX . "users u LEFT JOIN " . TABLE_PREFIX . "userfields uf ON(u.uid=uf.ufid)
-WHERE email = '" . $email . "' 
+WHERE find_in_set(uid, '". $uids. "')
 ORDER BY username");
 while ($ownCharacter = $db->fetch_array($ownCharacters)) {
     if ($ownCharacter['fid' . $fidWhitelist . ''] == "Bleibt") {
@@ -166,3 +167,19 @@ if ($mybb->settings['whitelist_ice'] == "-1") { // Ice ist nicht aktiviert
     eval("\$page = \"" . $templates->get("whitelistIce") . "\";");
 }
 output_page($page);
+
+function getAllUids() {
+    global $mybb, $db;
+    if ($mybb->user['as_uid'] != 0) {
+        $mainUid = $mybb->user['as_uid'];
+    } else {
+        $mainUid = $mybb->user['uid'];
+    }
+
+    $returnString = $mainUid;      
+    $query = $db->simple_select('users', 'uid', 'as_uid = ' . $mainUid);
+    while ($result = $db->fetch_array($query)) {
+        $returnString .= ','. $result['uid']; 
+    }
+    return $returnString;
+}

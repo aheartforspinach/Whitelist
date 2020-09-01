@@ -1,31 +1,32 @@
 <?php
 // automatische Whitelist by aheartforspinach
 
-if(!defined("IN_MYBB"))
+if (!defined("IN_MYBB")) {
+    die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
+}
+
+function whitelist_info()
 {
-	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
+    return array(
+        "name"            => "Whitelist",
+        "description"    => "erstellt automatisch am ersten jeden Monats eine Whitelist",
+        "author"        => "aheartforspinach",
+        "authorsite"    => "https://storming-gates.de/member.php?action=profile&uid=176",
+        "version"        => "1.0",
+        "compatibility" => "18*"
+    );
 }
 
-function whitelist_info(){
-	return array(
-		"name"			=> "Whitelist",
-		"description"	=> "erstellt automatisch am ersten jeden Monats eine Whitelist",
-		"author"		=> "aheartforspinach",
-		"authorsite"	=> "https://storming-gates.de/member.php?action=profile&uid=176",
-		"version"		=> "1.0",
-		"compatibility" => "18*"
-	);
-}
-
-function whitelist_install(){
+function whitelist_install()
+{
     global $db, $cache, $mybb;
 
-    $db->write_query("ALTER TABLE ".TABLE_PREFIX."users ADD hasSeenWhitelist INT(1) NOT NULL DEFAULT '0';");
-    
-    $date = new DateTime('01.'. date("m.Y", strtotime('+1 month')));
-    $date->setTime(1,0,0); 
+    $db->write_query("ALTER TABLE " . TABLE_PREFIX . "users ADD hasSeenWhitelist INT(1) NOT NULL DEFAULT '0';");
+
+    $date = new DateTime('01.' . date("m.Y", strtotime('+1 month')));
+    $date->setTime(1, 0, 0);
     $whitelistTask = array(
-        'title' => 'Whitelist Reset', 
+        'title' => 'Whitelist Reset',
         'description' => 'Automatically resets all fields from the whitelist plugin',
         'file' => 'whitelist',
         'minute' => 0,
@@ -35,14 +36,15 @@ function whitelist_install(){
         'weekday' => '*',
         'nextrun' => $date->getTimestamp(),
         'logging' => 1,
-        'locked' => 0);
+        'locked' => 0
+    );
     $db->insert_query('tasks', $whitelistTask);
 
     $disporder = 0;
     $highestDisporder = $db->simple_select('profilefields', 'disporder');
 
-    while ($highetsDisporder=$db->fetch_array($highestDisporder)){
-        if($disporder < $highetsDisporder['disporder']){
+    while ($highetsDisporder = $db->fetch_array($highestDisporder)) {
+        if ($disporder < $highetsDisporder['disporder']) {
             $disporder = $highetsDisporder['disporder'];
         }
     }
@@ -54,24 +56,24 @@ function whitelist_install(){
         'type' => 'radio
 Bleibt
 Geht',
-        'disporder' => $disporder+1,
+        'disporder' => $disporder + 1,
         'viewableby' => '-1',
         'editableby' => '-1',
         'maxlength' => 0,
         'viewableby' => '3,4',
         'editableby' => '3,4',
-		'regex' => ''
+        'regex' => ''
     );
 
     $newFidNr = $db->insert_query("profilefields", $newPfWhitelist);
-    $db->write_query("ALTER TABLE ".TABLE_PREFIX."userfields ADD fid" . $newFidNr . " TEXT DEFAULT NULL;");
+    $db->write_query("ALTER TABLE " . TABLE_PREFIX . "userfields ADD fid" . $newFidNr . " TEXT DEFAULT NULL;");
 
     //Einstellungen 
-	$setting_group = array(
-      'name' => 'whitelist',
-      'title' => 'Whitelist',
-      'description' => 'Einstellungen für das Whitelist-Plugin',
-      'isdefault' => 0
+    $setting_group = array(
+        'name' => 'whitelist',
+        'title' => 'Whitelist',
+        'description' => 'Einstellungen für das Whitelist-Plugin',
+        'isdefault' => 0
     );
     $gid = $db->insert_query("settinggroups", $setting_group);
 
@@ -127,15 +129,15 @@ Geht',
         ),
         'whitelist_inplay' => array(
             'title' => 'Inplaykategorie',
-            'description' => 'Gib hier die ID von der Inplaykategorie ein.',
-            'optionscode' => 'text',
+            'description' => 'Wähle hier alle Inplaybereiche aus.',
+            'optionscode' => 'forumselect',
             'value' => '-1', // Default
             'disporder' => 8
         ),
         'whitelist_archive' => array(
             'title' => 'Archivkategorie',
-            'description' => 'Gib hier die ID von der Archivkategorie ein.',
-            'optionscode' => 'text',
+            'description' => 'Wähle das Inplayarchiv aus.',
+            'optionscode' => 'forumselectsingle',
             'value' => '-1', // Default
             'disporder' => 9
         ),
@@ -162,17 +164,17 @@ Geht',
         ),
     );
 
-    foreach($setting_array as $name => $setting){
+    foreach ($setting_array as $name => $setting) {
         $setting['name'] = $name;
         $setting['gid'] = $gid;
-  
+
         $db->insert_query('settings', $setting);
     }
 
     //Template whitelist bauen
     $insert_array = array(
-        'title'		=> 'whitelist',
-        'template'	=> $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
+        'title'        => 'whitelist',
+        'template'    => $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
 
         <head>
             <title>{$mybb->settings[\'bbname\']} - Whitelist</title>
@@ -239,16 +241,16 @@ Geht',
             margin-top: 20px;    
         }
         </style>'),
-        'sid'		=> '-1',
-        'version'	=> '',
-        'dateline'	=> TIME_NOW
-      );
-      $db->insert_query("templates", $insert_array);
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 
     //Template whitelistIce bauen
     $insert_array = array(
-        'title'		=> 'whitelistIce',
-        'template'	=> $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
+        'title'        => 'whitelistIce',
+        'template'    => $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
 
         <head>
             <title>{$mybb->settings[\'bbname\']} - Whitelist</title>
@@ -319,121 +321,144 @@ Geht',
             margin-top: 20px;    
         }
         </style>'),
-        'sid'		=> '-1',
-        'version'	=> '',
-        'dateline'	=> TIME_NOW
-      );
-      $db->insert_query("templates", $insert_array);
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 
-      //Template whitelistCharacters bauen
-      $insert_array = array(
-        'title'		=> 'whitelistCharacters',
-        'template'	=> $db->escape_string('<div class="charakter">{$userlink}<br>
+    //Template whitelistCharacters bauen
+    $insert_array = array(
+        'title'        => 'whitelistCharacters',
+        'template'    => $db->escape_string('<div class="charakter">{$userlink}<br>
         <input type="hidden" name="uid{$countCharacters}" value="{$userUid}">
           <input type="radio" name="status{$countCharacters}" value="Bleibt" {$checkedStay}> Bleiben<br>
           <input type="radio" name="status{$countCharacters}" value="Geht" {$checkedGo}> Gehen<br>
         </div>'),
-        'sid'		=> '-1',
-        'version'	=> '',
-        'dateline'	=> TIME_NOW
-      );
-      $db->insert_query("templates", $insert_array);
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 
-      //Template whitelistUser bauen
-      $insert_array = array(
-        'title'		=> 'whitelistUser',
-        'template'	=> $db->escape_string('$username</br>'),
-        'sid'		=> '-1',
-        'version'	=> '',
-        'dateline'	=> TIME_NOW
-      );
-      $db->insert_query("templates", $insert_array);
+    //Template whitelistUser bauen
+    $insert_array = array(
+        'title'        => 'whitelistUser',
+        'template'    => $db->escape_string('$username</br>'),
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 
-      //Template whitelistHeader bauen
-      $insert_array = array(
-        'title'		=> 'whitelistHeader',
-        'template'	=> $db->escape_string('<div class="pm_alert">Die aktuelle <a href="/whitelist.php">Whitelist</a> ist draußen. {$noEcho} <a href="/whitelist.php?seen=1" title="Nicht mehr anzeigen"><span style="font-size: 14px;margin-top: -2px;float:right;">✕</span></a></div>'),
-        'sid'		=> '-1',
-        'version'	=> '',
-        'dateline'	=> TIME_NOW
-      );
-      $db->insert_query("templates", $insert_array);
+    //Template whitelistHeader bauen
+    $insert_array = array(
+        'title'        => 'whitelistHeader',
+        'template'    => $db->escape_string('<div class="pm_alert">Die aktuelle <a href="/whitelist.php">Whitelist</a> ist draußen. {$noEcho} <a href="/whitelist.php?seen=1" title="Nicht mehr anzeigen"><span style="font-size: 14px;margin-top: -2px;float:right;">✕</span></a></div>'),
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 
-    rebuild_settings(); 
+    rebuild_settings();
 }
 
-function whitelist_is_installed(){
-  global $db;
-	if($db->field_exists('hasSeenWhitelist', 'users')) {
-			return true;
-	}
-	return false;
-}
-
-function whitelist_uninstall(){
+function whitelist_is_installed()
+{
     global $db;
-$db->delete_query('settings', "name IN('whitelist_guest','whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo', 'whitelist_dayBegin')");
+    if ($db->field_exists('hasSeenWhitelist', 'users')) {
+        return true;
+    }
+    return false;
+}
+
+function whitelist_uninstall()
+{
+    global $db;
+    $db->delete_query('settings', "name IN('whitelist_guest','whitelist_applicant', 'whitelist_showUser', 'whitelist_teamaccs','whitelist_post', 'whitelist_fid', 'whitelist_ice', 'whitelist_player', 'whitelist_inplay', 'whitelist_archive', 'whitelist_echo', 'whitelist_dayBegin')");
     $db->delete_query('settinggroups', "name = 'whitelist'");
     $db->delete_query("templates", "title IN('whitelist', 'whitelistIce', 'whitelistUser', 'whitelistCharacters', 'whitelistHeader')");
-    if($db->field_exists('hasSeenWhitelist', 'users'))
+    if ($db->field_exists('hasSeenWhitelist', 'users'))
         $db->drop_column('users', 'hasSeenWhitelist');
 
     $whitelistFid = $db->fetch_array($db->simple_select('profilefields', 'fid', 'name = "Whitelist"'))['fid'];
     $db->delete_query('profilefields', "name = 'Whitelist'");
     $whitelistFid = 'fid' .  $whitelistFid;
-    if($db->field_exists($whitelistFid, 'userfields'))
+    if ($db->field_exists($whitelistFid, 'userfields'))
         $db->drop_column('userfields', $whitelistFid);
 
     $db->delete_query('tasks', 'file = "whitelist"');
     rebuild_settings();
 }
 
-function whitelist_activate(){
-  global $db, $mybb;
-  include MYBB_ROOT."/inc/adminfunctions_templates.php";
-  find_replace_templatesets("header", "#".preg_quote('{$awaitingusers}')."#i", '{$awaitingusers} {$header_whitelist}');
+function whitelist_activate()
+{
+    global $db, $mybb;
+    include MYBB_ROOT . "/inc/adminfunctions_templates.php";
+    find_replace_templatesets("header", "#" . preg_quote('{$awaitingusers}') . "#i", '{$awaitingusers} {$header_whitelist}');
 }
 
-function whitelist_deactivate(){
-  global $db, $mybb;
-  include MYBB_ROOT."/inc/adminfunctions_templates.php";
-  find_replace_templatesets("header", "#".preg_quote('{$header_whitelist}')."#i", '', 0);
+function whitelist_deactivate()
+{
+    global $db, $mybb;
+    include MYBB_ROOT . "/inc/adminfunctions_templates.php";
+    find_replace_templatesets("header", "#" . preg_quote('{$header_whitelist}') . "#i", '', 0);
 }
 
 //Benachrichtung bei Whitelist
 $plugins->add_hook('global_intermediate', 'whitelist_alert');
-function whitelist_alert(){
-    global $db, $mybb, $templates, $header_whitelist; 
+function whitelist_alert()
+{
+    global $db, $mybb, $templates, $header_whitelist;
 
     $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
-    $alertDays = intval($mybb->settings['whitelist_echo']); 
-    $fidWhitelist = intval($mybb->settings['whitelist_fid']); 
+    $alertDays = intval($mybb->settings['whitelist_echo']);
+    $fidWhitelist = intval($mybb->settings['whitelist_fid']);
     $email = $mybb->user['email'];
 
-    if($_GET['seen'] == 1){
-        $db->query("UPDATE ".TABLE_PREFIX."users SET hasSeenWhitelist = 1 WHERE email = '" . $email . "'");
+    if ($_GET['seen'] == 1) {
+        $db->query("UPDATE " . TABLE_PREFIX . "users SET hasSeenWhitelist = 1 WHERE email = '" . $email . "'");
     }
-
-    $charas = $db->query("SELECT hasSeenWhitelist, fid". $fidWhitelist ."
-    FROM ".TABLE_PREFIX."users u LEFT JOIN ".TABLE_PREFIX."userfields uf ON(u.uid=uf.ufid)
-    WHERE email = '" . $email . "' 
+    $uids = getAllUidsBanner();
+    $charas = $db->query("SELECT hasSeenWhitelist, fid" . $fidWhitelist . "
+    FROM " . TABLE_PREFIX . "users u LEFT JOIN " . TABLE_PREFIX . "userfields uf ON(u.uid=uf.ufid)
+    WHERE find_in_set(uid, '" . $uids . "')
     ORDER BY username");
     $header_whitelist = "";
     $dontSee = false;
     $noEcho = "";
-    while($chara=$db->fetch_array($charas)) {
-        if($chara['hasSeenWhitelist'] == 1){
+    $noEchoBool = true;
+    while ($chara = $db->fetch_array($charas)) {
+        if ($chara['hasSeenWhitelist'] == 1) 
             $dontSee = true;
-        }
-        if($chara['fid'. $fidWhitelist .''] == 'Bleibt'){
-            $noEcho = "";
-        }else{
-            $noEcho = "Du hast dich noch nicht zurückgemeldet.";
-        }
+
+        if ($chara['fid' . $fidWhitelist . ''] == 'Bleibt')
+            $noEchoBool = false;
+        
     }
-    if(date("j", time()) <= ($alertDays + $dayBegin) && $alertDays != -1 && $mybb->user['uid'] != 0 && !$dontSee){
-        eval("\$header_whitelist .= \"".$templates->get("whitelistHeader")."\";");
+    if($noEchoBool)
+        $noEcho = "Du hast dich noch nicht zurückgemeldet.";
+    
+
+    if (date("j", time()) <= ($alertDays + $dayBegin) && $alertDays != -1 && $mybb->user['uid'] != 0 && !$dontSee) {
+        eval("\$header_whitelist .= \"" . $templates->get("whitelistHeader") . "\";");
     }
 }
 
-?>
+function getAllUidsBanner()
+{
+    global $mybb, $db;
+    if ($mybb->user['as_uid'] != 0) {
+        $mainUid = $mybb->user['as_uid'];
+    } else {
+        $mainUid = $mybb->user['uid'];
+    }
+
+    $returnString = $mainUid;
+    $query = $db->simple_select('users', 'uid', 'as_uid = ' . $mainUid);
+    while ($result = $db->fetch_array($query)) {
+        $returnString .= ',' . $result['uid'];
+    }
+    return $returnString;
+}
