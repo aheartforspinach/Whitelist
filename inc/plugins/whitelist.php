@@ -31,7 +31,7 @@ function whitelist_install()
     $db->add_column('users', 'whitelist', 'tinyint not null default 0');
     $db->add_column('users', 'hasSeenWhitelist', 'tinyint not null default 0');
 
-    // tassks
+    // tasks
     $date = new DateTime('01.' . date("m.Y", strtotime('+1 month')));
     $date->setTime(1, 0, 0);
     $whitelistTask = array(
@@ -48,6 +48,51 @@ function whitelist_install()
         'locked' => 0
     );
     $db->insert_query('tasks', $whitelistTask);
+
+    // css
+    $css = array(
+		'name' => 'whitelist.css',
+		'tid' => 1,
+		'attachedto' => '',
+		"stylesheet" =>	'.whitelist-form-heading-container {
+    display: flex;
+}
+
+.whitelist-form-heading-container .button {
+    height: min-content;
+    align-self: center;
+    margin-left: 15px;	
+}
+
+.whitelist-form-heading-container form {
+    align-self: center;
+    margin-left: 20px;
+}
+
+.whitelist-form-characters-container {
+    display: grid;
+    grid-gap: 15px;
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.whitelist-banner-close {
+    font-size: 14px;
+    margin-top: -2px;
+    float: right;
+}',
+		'cachefile' => '',
+		'lastmodified' => time()
+	);
+
+	require_once MYBB_ADMIN_DIR."inc/functions_themes.php";
+
+	$sid = $db->insert_query("themestylesheets", $css);
+	$db->update_query("themestylesheets", array("cachefile" => "css.php?stylesheet=".$sid), "sid = '".$sid."'", 1);
+
+	$tids = $db->simple_select("themes", "tid");
+	while($theme = $db->fetch_array($tids)) {
+		update_theme_stylesheet_list($theme['tid']);
+	}
 
     // settings 
     $setting_group = array(
@@ -132,197 +177,7 @@ function whitelist_install()
     }
 
     // templates
-    $templategroup = array(
-        "prefix" => "whitelist",
-        "title" => $db->escape_string("Whitelist"),
-    );
-
-    $db->insert_query("templategroups", $templategroup);
-
-    $insert_array = array(
-        'title'        => 'whitelist',
-        'template'    => $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
-
-        <head>
-            <title>{$mybb->settings[\'bbname\']} - Whitelist</title>
-            {$headerinclude}
-        </head>
-        
-        <body>
-            {$header}
-            <div class="panel" id="panel">
-                <div id="panel">$menu</div>
-                <h1>Whitelist vom 01.{$thisMonth}</h1>
-        
-                <blockquote>Hier kann ein Text stehen zu euren speziellen Whitelist Regeln oder eine Anleitung</blockquote>
-        
-        
-                <div style="width:95%; margin:auto;">
-                    <h3>Eigene Charaktere</h3>
-                    <form action="whitelist.php" method="post">
-                        {$form}
-                        <br>
-                        <div style="text-align:center;">
-                            <input type="submit" value="Bestätigen" class="buttonWhitelist button">
-                        </div>
-                    </form>
-                </div>
-        
-        
-                <br>
-                <table style="width:95%; margin:auto;">
-                    <tr>
-                        <td width="25%" class="thead">
-                            Bleibt
-                        </td>
-                        <td width="25%" class="thead">
-                            Geht
-                        </td>
-						<td width="25%" class="thead">
-                            Abwesend
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="top">{$stay}</td>
-                        <td valign="top">{$go}</td>
-						<td valign="top">{$away}</td>
-                    </tr>
-                </table>
-        
-            </div>
-            {$footer}
-        </body>
-        
-        </html>
-        <style>
-        .charakter{
-            width:25%;
-            float:left;
-            margin-top: 20px;
-        }
-        
-        .buttonWhitelist{
-            margin: auto;
-            margin-left: 350px;
-            margin-right: 350px;    
-            margin-top: 20px;    
-        }
-        </style>'),
-        'sid'        => '-2',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'whitelist_ice',
-        'template'    => $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
-
-        <head>
-            <title>{$mybb->settings[\'bbname\']} - Whitelist</title>
-            {$headerinclude}
-        </head>
-        
-        <body>
-            {$header}
-            <div class="panel" id="panel">
-                <div id="panel">$menu</div>
-                <h1>Whitelist vom 01.{$thisMonth}</h1>
-        
-                <blockquote>Hier kann ein Text stehen zu euren speziellen Whitelist Regeln oder eine Anleitung</blockquote>
-        
-        
-                <div style="width:95%; margin:auto;">
-                    <h3>Eigene Charaktere</h3>
-                    <form action="whitelist.php" method="post">
-                        {$form}
-                        <br>
-                        <div style="text-align:center;">
-                            <input type="submit" value="Bestätigen" class="buttonWhitelist button">
-                        </div>
-                    </form>
-                </div>
-        
-        
-                <br>
-                <table style="width:95%; margin:auto;">
-                    <tr>
-                        <td width="25%" class="thead">
-                            Bleibt
-                        </td>
-                        <td width="25%" class="thead">
-                            Geht
-                        </td>
-						<td width="25%" class="thead">
-                            Abwesend
-                        </td>
-                        <td width="25%" class="thead">
-                            Auf Eis
-                        </td>
-                    </tr>
-                    <tr>
-                        <td valign="top">{$stay}</td>
-                        <td valign="top">{$go}</td>
-						<td valign="top">{$away}</td>
-                        <td valign="top">{$onIce}</td>
-                    </tr>
-                </table>
-        
-            </div>
-            {$footer}
-        </body>
-        
-        </html>
-        <style>
-        .charakter{
-            width:25%;
-            float:left;
-            margin-top: 20px;
-        }
-        
-        .buttonWhitelist{
-            margin: auto;
-            margin-left: 350px;
-            margin-right: 350px;    
-            margin-top: 20px;    
-        }
-        </style>'),
-        'sid'        => '-2',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'whitelist_characters',
-        'template'    => $db->escape_string('<div class="charakter">{$userlink}<br>
-        <input type="hidden" name="uid{$characterUid}" value="{$userUid}">
-          <input type="radio" name="status{$characterUid}" value="Bleibt" {$checkedStay}> Bleiben<br>
-          <input type="radio" name="status{$characterUid}" value="Geht" {$checkedGo}> Gehen<br>
-        </div>'),
-        'sid'        => '-2',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'whitelist_user',
-        'template'    => $db->escape_string('$username</br>'),
-        'sid'        => '-2',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'whitelist_header',
-        'template'    => $db->escape_string('<div class="pm_alert">{$lang->whitelist_banner} {$echo} <a href="/whitelist.php?seen=1" title="{$lang->whitelist_hide_banner}"><span style="font-size: 14px;margin-top: -2px;float:right;">✕</span></a></div>'),
-        'sid'        => '-2',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
+    addTemplates();
 
     rebuild_settings();
 }
@@ -348,6 +203,14 @@ function whitelist_uninstall()
         $db->drop_column('users', 'whitelist');
 
     $db->delete_query('tasks', 'file = "whitelist"');
+
+    require_once MYBB_ADMIN_DIR."inc/functions_themes.php";
+	$db->delete_query("themestylesheets", "name = 'whitelist.css'");
+	$query = $db->simple_select("themes", "tid");
+	while($theme = $db->fetch_array($query)) {
+		update_theme_stylesheet_list($theme['tid']);
+	}
+
     rebuild_settings();
 }
 
@@ -372,6 +235,8 @@ function whitelist_alert()
     global $mybb, $templates, $header_whitelist, $lang;
     require_once 'inc/datahandlers/whitelist.php';
 
+    if (!whitelist_is_installed()) return;
+
     $lang->load('whitelist');
     $whitelistHandler = new whitelistHandler($mybb->user['uid']);
     $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
@@ -391,4 +256,181 @@ function whitelist_alert()
     if (date("j", time()) <= ($alertDays + $dayBegin) && $alertDays != -1 && $mybb->user['uid'] != 0 && !$hideWhitelist) {
         eval("\$header_whitelist .= \"" . $templates->get("whitelist_header") . "\";");
     }
+}
+
+// update
+$plugins->add_hook('misc_start', 'whitelist_misc_start');
+function whitelist_misc_start()
+{
+    global $mybb, $db;
+    
+    if ($mybb->get_input('action') != 'whitelist-update') {
+        return;
+    }
+
+    if ($db->field_exists('whitelist', 'users')) {
+        error('Plugin wurde bereits geupdatet');
+        return;
+    }
+
+    // remove unnecessary settings
+    $db->delete_query('settings', "name in ('whitelist_applicant', 'whitelist_fid', 'whitelist_inplay', 'whitelist_archive')");
+
+    // add new setting
+    $gid = $db->fetch_field($db->simple_select('settinggroups', 'gid', 'name ="whitelist"'), 'gid');
+    $db->insert_query('settings', [
+        'gid' => $gid,
+        'name' => 'whitelist_hiddenGroups',
+        'title' => 'Auflistung von Gruppen',
+        'description' => 'Welche Gruppen sollen sich nicht zurückmelden können? Wenn nein: nichts auswählen',
+        'optionscode' => 'groupselect',
+        'value' => '',
+        'disporder' => 2
+    ]);
+
+    // add new db column
+    $db->add_column('users', 'whitelist', 'tinyint not null default 0');
+
+    // add new templates and css
+    addTemplates();
+
+    rebuild_settings();
+}
+
+function addTemplates() {
+    global $db;
+
+    $templategroup = array(
+        "prefix" => "whitelist",
+        "title" => $db->escape_string("Whitelist"),
+    );
+
+    $db->insert_query("templategroups", $templategroup);
+
+    $insert_array = array(
+        'title'        => 'whitelist',
+        'template'    => $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>{$mybb->settings[\'bbname\']} - Whitelist</title>
+    {$headerinclude}
+</head>
+
+<body>
+    {$header}
+    <div class="panel" id="panel">
+        <div id="panel">{$menu}</div>
+        <h1>{$lang->whitelist_heading} {$thisMonth}</h1>
+
+        <blockquote>{$lang->whitelist_explanation}</blockquote>
+
+        {$form}
+
+        <table style="width:95%; margin:auto;">
+            <tr>
+                <th width="25%" class="thead">
+                    {$lang->whitelist_stay}
+                </th>
+                <th width="25%" class="thead">
+                    {$lang->whitelist_go}
+                </th>
+                <th width="25%" class="thead">
+                    {$lang->whitelist_away}
+                </th>
+                {$iceTh}
+            </tr>
+            <tr>
+                <td valign="top">{$stay}</td>
+                <td valign="top">{$go}</td>
+                <td valign="top">{$away}</td>
+                {$iceTd}
+            </tr>
+        </table>
+
+    </div>
+    {$footer}
+</body>
+
+</html>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'whitelist_characters',
+        'template'    => $db->escape_string('<div>{$userlink}<br>
+    <input type="hidden" name="uid{$uid}" value="{$uid}">
+    <input type="radio" name="status{$uid}" id="stay{$uid}" value="1" {$checkedStay}> <label for="stay{$uid}">{$lang->whitelist_stay_action}</label><br>
+    <input type="radio" name="status{$uid}" id="go{$uid}" value="0" {$checkedGo}> <label for="go{$uid}">{$lang->whitelist_go_action}</label><br>
+</div>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'whitelist_form',
+        'template'    => $db->escape_string('<div style="width:95%; margin:auto;">
+    <div class="whitelist-form-heading-container">
+        <h3>{$lang->whitelist_own_characters}</h3>
+        <form action="whitelist.php" method="post">
+            <input type="hidden" name="setAllCharactersOnStay" value="1" />
+            <input type="submit" value="{$lang->whitelist_submit_all_characters}" class="button" />
+        </form>
+    </div>
+        
+    <form action="whitelist.php" method="post">
+        <div class="whitelist-form-characters-container">{$charactersForm}</div>
+        <br>
+        <div style="text-align:center;">
+            <input type="submit" value="{$lang->whitelist_submit}" class="button" />
+        </div>
+    </form>
+</div>
+<br>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'whitelist_ice_td',
+        'template'    => $db->escape_string('<td valign="top">{$ice}</td>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'whitelist_ice_th',
+        'template'    => $db->escape_string('<th width="25%" class="thead">
+    {$lang->whitelist_ice}
+</th>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'whitelist_user',
+        'template'    => $db->escape_string('{$username}</br>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'whitelist_header',
+        'template'    => $db->escape_string('<div class="pm_alert">{$lang->whitelist_banner} {$echo} <a href="/whitelist.php?seen=1" title="{$lang->whitelist_hide_banner}"><span class="whitelist-banner-close">✕</span></a></div>'),
+        'sid'        => '-2',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 }
