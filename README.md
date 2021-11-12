@@ -11,6 +11,7 @@ __Änderungen zu Version 1.0__
 * statt einem Profilfeld wird es nun alleinig über die Datenbanktabelle `users` abgebildet
 * Datenbankabfragen wurden deutlich reduziert
 * Man kann alle Charaktere auf einmal zurückmelden
+* Es wird eine css-Datei namens `whitelist.css` angelegt
 
 Wenn ihr das Whitelistplugin 1.0 verwendet, ladet den Quellcode herunter und bei euch wieder hoch __ohne__ das Plugin zu deaktivieren oder zu deinstallieren. Anschließend müsst ihr in eurem Forum die URL `/misc.php?action=whitelist-update`. Die neuen Templates werden erstellt, aber die alten, die im globalen liegen, bleiben bestehen, damit ihr noch Dinge sichern könnt. Ich würde euch aber empfehlen diese zu löschen anschließend - ebenso wie das Profilfeld. Das Update nicht unbedingt durchführen, wenn eine aktive Whitelist läuft, weil diese Felder zurück gesetzt werden
 
