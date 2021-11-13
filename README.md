@@ -20,6 +20,8 @@ Die CSS-Datei muss einmal manuell nach dem Update angelegt werden. Einfach einen
 ```
 .whitelist-form-heading-container {
     display: flex;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .whitelist-form-heading-container .button {
@@ -36,7 +38,7 @@ Die CSS-Datei muss einmal manuell nach dem Update angelegt werden. Einfach einen
 .whitelist-form-characters-container {
     display: grid;
     grid-gap: 15px;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
 }
 
 .whitelist-banner-close {
