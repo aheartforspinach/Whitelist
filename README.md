@@ -13,7 +13,38 @@ __Änderungen zu Version 1.0__
 * Man kann alle Charaktere auf einmal zurückmelden
 * Es wird eine css-Datei namens `whitelist.css` angelegt
 
-Wenn ihr das Whitelistplugin 1.0 verwendet, ladet den Quellcode herunter und bei euch wieder hoch __ohne__ das Plugin zu deaktivieren oder zu deinstallieren. Anschließend müsst ihr in eurem Forum die URL `/misc.php?action=whitelist-update`. Die neuen Templates werden erstellt, aber die alten, die im globalen liegen, bleiben bestehen, damit ihr noch Dinge sichern könnt. Ich würde euch aber empfehlen diese zu löschen anschließend - ebenso wie das Profilfeld. Das Update nicht unbedingt durchführen, wenn eine aktive Whitelist läuft, weil diese Felder zurück gesetzt werden
+Wenn ihr das Whitelistplugin 1.0 verwendet, ladet den Quellcode herunter und bei euch wieder hoch **ohne** das Plugin zu deaktivieren oder zu deinstallieren. Anschließend müsst ihr in eurem Forum die URL `/misc.php?action=whitelist-update`. Die neuen Templates werden erstellt, aber die alten, die im globalen liegen, bleiben bestehen, damit ihr noch Dinge sichern könnt. Ich würde euch aber empfehlen diese zu löschen anschließend - ebenso wie das Profilfeld. Das Update nicht unbedingt durchführen, wenn eine aktive Whitelist läuft, weil diese Felder zurück gesetzt werden
+
+Die CSS-Datei muss einmal manuell nach dem Update angelegt werden. Einfach einen neuen Stylesheet mit dem Namen `whitelist` anlegen und folgenden Inhalt einfügen:
+
+```
+.whitelist-form-heading-container {
+    display: flex;
+}
+
+.whitelist-form-heading-container .button {
+    height: min-content;
+    align-self: center;
+    margin-left: 15px;	
+}
+
+.whitelist-form-heading-container form {
+    align-self: center;
+    margin-left: 20px;
+}
+
+.whitelist-form-characters-container {
+    display: grid;
+    grid-gap: 15px;
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.whitelist-banner-close {
+    font-size: 14px;
+    margin-top: -2px;
+    float: right;
+}
+```
 
 
 ## Funktionen
