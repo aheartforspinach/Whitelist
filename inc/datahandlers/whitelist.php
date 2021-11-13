@@ -8,11 +8,16 @@ class whitelistHandler
 {
     private $characters = [];
 
-    public function __construct($uid)
+    public function __construct()
     {
-        global $db;
-        $uid = $db->escape_string($uid);
-        $query = $db->simple_select('users', 'uid, username, usergroup, whitelist, hasSeenWhitelist', 'uid = '. $uid . ' or as_uid = '. $uid);
+        global $db, $mybb;
+        $mainUid = $mybb->user['as_uid'] == 0 ? $mybb->user['uid'] : $mybb->user['as_uid'];
+        $query = $db->simple_select(
+            'users', 
+            'uid, username, usergroup, whitelist, hasSeenWhitelist', 
+            'uid = '. $mainUid . ' or as_uid = '. $mainUid . ' and not find_in_set(usergroup, "'.$mybb->settings['whitelist_hiddenGroups'].'")',
+            array('order_by' => 'username')
+        );
 
         while ($row = $db->fetch_array($query)) {
             $this->characters[$row['uid']] = array(
@@ -32,7 +37,31 @@ class whitelistHandler
         $monthInterval = strtotime('-' . $postInterval . ' month');
         $firstXMonthAgo = $startDay . '.' . date('m.Y', $monthInterval);
         $UnixFirstXMonthAgo = strtotime($firstXMonthAgo);
-        return $dateToTest > $UnixFirstXMonthAgo;
+        return ($dateToTest > $UnixFirstXMonthAgo);
+    }
+
+    /**
+     *
+     * @return array with character uids
+     * 
+    */
+    private function getAllowedCharacters(): array
+    {
+        global $db;
+
+        $allowedCharacters = [];
+        $query = $db->simple_select(
+            'ipt_scenes ips join '.  TABLE_PREFIX .'threads t on ips.tid = t.tid', 
+            'uid, dateline',
+            'find_in_set(uid, "'. implode(',', array_keys($this->characters)) .'")'
+        );
+        while ($row = $db->fetch_array($query)) {
+            if ($this->isOlderThanXMonth($row['dateline']) && !in_array($row['uid'], $allowedCharacters)) {
+                $allowedCharacters[] = (int)$row['uid'];
+            }
+        }
+
+        return $allowedCharacters;
     }
 
     public function getCharacters(): array
@@ -43,7 +72,11 @@ class whitelistHandler
     public function hideBanner() 
     {
         global $db;
-        $db->update_query('users', array('hasSeenWhitelist' => 1), 'find_in_set("uid", "'. implode(',', array_keys($this->characters)) .'")');
+        $db->update_query(
+            'users', 
+            array('hasSeenWhitelist' => 1), 
+            'find_in_set("uid", "'. implode(',', array_keys($this->characters)) .'")'
+        );
     }
 
     /**
@@ -76,33 +109,38 @@ class whitelistHandler
     public function setCharactersOnStay() {
         global $db;
         foreach ($this->characters as $uid => $character) {
+            // check if post is required
+            if (!$this->canStatusOfCharacterCanBeChange($uid, $character['usergroup'])) {
+                continue;
+            }
+
             $db->update_query('users', ['whitelist' => 1], 'uid = '. $uid);
             $this->characters[$uid]['stayOrGo'] = 1;
         }
     }
 
-    /**
+     /**
      *
-     * @return array with character uids
+     * @return bool
      * 
     */
-    public function getAllowedCharacters(): array
-    {
-        global $db;
+    public function canStatusOfCharacterCanBeChange($uid, $usergroup) {
+        global $mybb;
+        $showWhitelistUntil = intval($mybb->settings['whitelist_echo']) + intval($mybb->settings['whitelist_dayBegin']);
+        $hiddenGroups = explode(',', $mybb->settings['whitelist_hiddenGroups']);
+        $postIsRequired = intval($mybb->settings['whitelist_post']) === -1 ? false : true;
+        $allowedCharacters = $this->getAllowedCharacters();
 
-        $allowedCharacters = [];
-
-        $query = $db->simple_select(
-            'ipt_scenes ips join '.  TABLE_PREFIX .'threads t on ips.tid = t.tid', 
-            'uid, dateline',
-            'find_in_set("uid", "'. implode(',', array_keys($this->characters)) .'")'
-        );
-        while ($row = $db->fetch_array($query)) {
-            if (!$this->isOlderThanXMonth($row['dateline']) && !in_array($row['uid'], $allowedCharacters))
-                $allowedCharacters[] = (int)$row['uid'];
+        if (
+            ($postIsRequired && !in_array($uid, $allowedCharacters)) || 
+            date('j', time()) > $showWhitelistUntil || 
+            in_array($usergroup, $hiddenGroups)
+            ) 
+        {
+            return false;
         }
 
-        return $allowedCharacters;
+        return true;
     }
 
     /**
@@ -127,14 +165,14 @@ class whitelistHandler
         // ice db fields
         $fidIce = $fidIceDB = '';
         if (intval($mybb->settings['whitelist_ice']) !== -1) {
-            $fidIceDB = 'fid' . intval($mybb->settings['whitelist_ice']) . ',';
+            $fidIceDB = ', fid' . intval($mybb->settings['whitelist_ice']);
             $fidIce = intval($mybb->settings['whitelist_ice']);
         }
 
         $query = $db->simple_select(
-            'users u join '.  TABLE_PREFIX .'userfields uf on uid = ufid', 
-            'uid, username, usergroup, displaygroup, whitelist, away, as_uid, fid'. $fidPlayer,
-            'not find_in_set("usergroup", "'.$mybb->settings['whitelist_hiddenGroups'].'")'. $invisibleAccounts,
+            'users u join '.  TABLE_PREFIX .'userfields uf on u.uid = uf.ufid', 
+            'uid, username, usergroup, displaygroup, whitelist, away, as_uid, fid'. $fidPlayer . $fidIceDB,
+            'not find_in_set(usergroup, "'.$mybb->settings['whitelist_hiddenGroups'].'") ' . $invisibleAccounts,
             array('order_by' => 'username')
         );
 
@@ -147,6 +185,7 @@ class whitelistHandler
                 'stayOrGo' => $row['whitelist'],
                 'away' => $row['away'],
                 'as_uid' => $row['as_uid'],
+                'ice' => $row['fid'. $fidIce],
                 'playerName' => $row['fid'. $fidPlayer]
             ];
         }

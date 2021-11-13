@@ -11,7 +11,7 @@ if (!$db->field_exists('whitelist', 'users')) {
 add_breadcrumb('Whitelist', 'whitelist.php');
 global $db, $templates, $mybb, $lang;
 $lang->load('whitelist');
-$whitelistHandler = new whitelistHandler($mybb->user['uid']);
+$whitelistHandler = new whitelistHandler();
 
 $thisMonth = date('m.Y', time());
 
@@ -21,20 +21,11 @@ if (intval($mybb->settings['whitelist_guest']) === 0 && $mybb->user['uid'] === 0
 }
 
 // settings
-$postIsRequired = intval($mybb->settings['whitelist_post']) === -1 ? false : true;
-$hiddenGroups = explode(',', $mybb->settings['whitelist_hiddenGroups']);
 $showOtherUsers = intval($mybb->settings['whitelist_showUser']) === 1 ? false : true;
-$showWhitelistUntil = intval($mybb->settings['whitelist_echo']) + intval($mybb->settings['whitelist_dayBegin']);
 
 // return if settings aren't filled correctly
 if (intval($mybb->settings['whitelist_player']) < 0) {
     error($lang->whitelist_error_message);
-}
-
-// collect user which are allowed to react to whitelist
-$allowedCharacters = [];
-if ($postIsRequired) {
-    $allowedCharacters = $whitelistHandler->getAllowedCharacters();
 }
 
 // set all characters on stay
@@ -62,11 +53,7 @@ foreach ($characters as $uid => $character) {
     $checkedGo = $character['stayOrGo'] === 0 ? 'checked' : '';
     $checkedStay = $character['stayOrGo'] === 1 ? 'checked' : '';
 
-    if (
-        ($postIsRequired && !in_array($uid, $allowedCharacters)) || 
-        date('j', time()) > $showWhitelistUntil || 
-        in_array($character['usergroup'], $hiddenGroups)
-        ) 
+    if (!$whitelistHandler->canStatusOfCharacterCanBeChange($uid, $character['usergroup'])) 
     {
         $checkedGo .= ' disabled';
         $checkedStay .= ' disabled';
@@ -87,7 +74,7 @@ foreach ($users as $uid => $user) {
     }
 
     $username = build_profile_link(format_name($user['username'], $user['usergroup'], $user['displaygroup']), $uid);
-    if ($user['fid' . $fidIce . ''] == 'Ja') {
+    if ($user['ice'] == 'Ja') {
         eval("\$onIce .= \"" . $templates->get("whitelist_user") . "\";");
     } elseif ($user['away'] == 1) {
         if ($user['as_uid'] == 0) {

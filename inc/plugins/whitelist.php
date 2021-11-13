@@ -56,6 +56,8 @@ function whitelist_install()
 		'attachedto' => '',
 		"stylesheet" =>	'.whitelist-form-heading-container {
     display: flex;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .whitelist-form-heading-container .button {
@@ -72,7 +74,7 @@ function whitelist_install()
 .whitelist-form-characters-container {
     display: grid;
     grid-gap: 15px;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
 }
 
 .whitelist-banner-close {
@@ -238,7 +240,7 @@ function whitelist_alert()
     if (!whitelist_is_installed()) return;
 
     $lang->load('whitelist');
-    $whitelistHandler = new whitelistHandler($mybb->user['uid']);
+    $whitelistHandler = new whitelistHandler();
     $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
     $alertDays = intval($mybb->settings['whitelist_echo']);
 
@@ -319,7 +321,7 @@ function addTemplates() {
     {$header}
     <div class="panel" id="panel">
         <div id="panel">{$menu}</div>
-        <h1>{$lang->whitelist_heading} {$thisMonth}</h1>
+        <h1>{$lang->whitelist_heading}{$thisMonth}</h1>
 
         <blockquote>{$lang->whitelist_explanation}</blockquote>
 
