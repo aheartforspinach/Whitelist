@@ -74,15 +74,15 @@ foreach ($users as $uid => $user) {
     }
 
     $username = build_profile_link(format_name($user['username'], $user['usergroup'], $user['displaygroup']), $uid);
-    if ($user['ice'] == 'Ja') {
+    if ($user['stayOrGo'] == 1) {
+        eval("\$stay .= \"" . $templates->get("whitelist_user") . "\";");
+    } elseif ($user['ice'] == 'Ja') {
         eval("\$onIce .= \"" . $templates->get("whitelist_user") . "\";");
     } elseif ($user['away'] == 1) {
         if ($user['as_uid'] == 0) {
             $username = build_profile_link($user['playerName'], $user['uid']);
             eval("\$away .= \"" . $templates->get("whitelist_user") . "\";");
         }
-    } elseif ($user['stayOrGo'] == 1) {
-        eval("\$stay .= \"" . $templates->get("whitelist_user") . "\";");
     } elseif ($user['stayOrGo'] == 0) {
         eval("\$go .= \"" . $templates->get("whitelist_user") . "\";");
     }
