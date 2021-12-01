@@ -29,17 +29,6 @@ class whitelistHandler
         }
     }
 
-    private function isOlderThanXMonth($dateToTest) {
-        global $mybb;
-        $postInterval = intval($mybb->settings['whitelist_post']);
-        $startDay = intval($mybb->settings['whitelist_dayBegin']);
-
-        $monthInterval = strtotime('-' . $postInterval . ' month');
-        $firstXMonthAgo = $startDay . '.' . date('m.Y', $monthInterval);
-        $UnixFirstXMonthAgo = strtotime($firstXMonthAgo);
-        return ($dateToTest > $UnixFirstXMonthAgo);
-    }
-
     /**
      *
      * @return array with character uids
@@ -47,16 +36,23 @@ class whitelistHandler
     */
     private function getAllowedCharacters(): array
     {
-        global $db;
+        global $db, $mybb;
 
+        $postInterval = intval($mybb->settings['whitelist_post']);
+        $startDay = intval($mybb->settings['whitelist_dayBegin']);
+        $monthInterval = strtotime('-' . $postInterval . ' month');
+        $firstXMonthAgo = $startDay . '.' . date('m.Y', $monthInterval);
+        $UnixFirstXMonthAgo = strtotime($firstXMonthAgo);
         $allowedCharacters = [];
+
         $query = $db->simple_select(
-            'ipt_scenes ips join '.  TABLE_PREFIX .'threads t on ips.tid = t.tid', 
-            'uid, dateline',
-            'find_in_set(uid, "'. implode(',', array_keys($this->characters)) .'")'
+            'ipt_scenes ips join '.  TABLE_PREFIX .'posts p on ips.tid = p.tid join '.  TABLE_PREFIX .'ipt_scenes_partners ipp on ips.tid = ipp.tid', 
+            'ipp.uid',
+            'ipp.uid in ('. implode(',', array_keys($this->characters)) .') and dateline > '. $UnixFirstXMonthAgo,
+            ['order_by' => 'dateline', 'order_dir' => 'desc']
         );
         while ($row = $db->fetch_array($query)) {
-            if ($this->isOlderThanXMonth($row['dateline']) && !in_array($row['uid'], $allowedCharacters)) {
+            if (!in_array($row['uid'], $allowedCharacters)) {
                 $allowedCharacters[] = (int)$row['uid'];
             }
         }
