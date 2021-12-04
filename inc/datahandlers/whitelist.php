@@ -71,7 +71,7 @@ class whitelistHandler
         $db->update_query(
             'users', 
             array('hasSeenWhitelist' => 1), 
-            'find_in_set("uid", "'. implode(',', array_keys($this->characters)) .'")'
+            'find_in_set(uid, "'. implode(',', array_keys($this->characters)) .'")'
         );
     }
 

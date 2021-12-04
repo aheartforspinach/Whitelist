@@ -18,7 +18,7 @@ function whitelist_info()
         "description"    => "Erstellt automatisch jeden Monat eine Whitelist". $option,
         "author"        => "aheartforspinach",
         "authorsite"    => "https://github.com/aheartforspinach",
-        "version"        => "2.0.1",
+        "version"        => "2.0.2",
         "compatibility" => "18*"
     );
 }
@@ -246,9 +246,8 @@ function whitelist_alert()
 
 
     // hide banner 
-    if ($_GET['seen'] == 1) {
+    if ($_POST['seen'] == 1) {
         $whitelistHandler->hideBanner();
-        redirect('index.php', $lang->whitelist_redirect_message, $lang->whitelist_redirect_title);
     }
 
     $reactionWhitelist = $whitelistHandler->getReactionWhitelist();
@@ -429,7 +428,22 @@ function addTemplates() {
 
     $insert_array = array(
         'title'        => 'whitelist_header',
-        'template'    => $db->escape_string('<div class="pm_alert">{$lang->whitelist_banner} {$echo} <a href="/whitelist.php?seen=1" title="{$lang->whitelist_hide_banner}"><span class="whitelist-banner-close">✕</span></a></div>'),
+        'template'    => $db->escape_string('<div class="pm_alert">
+    {$lang->whitelist_banner} {$echo}
+    <span id="whitelist-close" class="whitelist-banner-close" style="cursor: pointer;" onclick="hideWhitelistBanner()">✕</span>
+</div>
+
+<script>
+    function hideWhitelistBanner() {
+        let formData = new FormData();
+        formData.append(\'seen\', \'1\');
+        fetch(\'whitelist.php\', {
+            method: \'POST\',
+            body: formData
+        });
+        document.querySelector(\'#whitelist-close\').closest(\'.pm_alert\').style.display = \'none\';
+    }
+</script>'),
         'sid'        => '-2',
         'version'    => '',
         'dateline'    => TIME_NOW
