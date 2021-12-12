@@ -25,5 +25,4 @@ $l['whitelist_redirect_title'] = 'Banner wurde verborgen!';
 $l['whitelist_redirect_message'] = 'Der Banner für die Whitelist wird bis zur nächsten Veröffentlichung verborgen.';
 
 // error message
-$l['whitelist_error_message'] = 'Fülle bitte zuerst die Einstellungen im AdminCP aus. Es muss mind. die FID vom Spielernamenprofilfeld, die ID der Inplaykategorie und die ID der 
-Archivkategorie angegeben werden.';
+$l['whitelist_error_message'] = 'Fülle bitte zuerst die Einstellungen im AdminCP aus. Es muss mind. die FID vom Spielernamenprofilfeld angegeben werden.';
