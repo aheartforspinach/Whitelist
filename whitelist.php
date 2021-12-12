@@ -24,7 +24,7 @@ if (intval($mybb->settings['whitelist_guest']) === 0 && $mybb->user['uid'] === 0
 $showOtherUsers = intval($mybb->settings['whitelist_showUser']) === 1 ? false : true;
 
 // return if settings aren't filled correctly
-if (intval($mybb->settings['whitelist_player']) < 0) {
+if (intval($mybb->settings['whitelist_player']) <= 0) {
     error($lang->whitelist_error_message);
 }
 
