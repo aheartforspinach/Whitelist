@@ -15,7 +15,7 @@ class whitelistHandler
         $query = $db->simple_select(
             'users', 
             'uid, username, usergroup, whitelist, hasSeenWhitelist', 
-            'uid = '. $mainUid . ' or as_uid = '. $mainUid . ' and not find_in_set(usergroup, "'.$mybb->settings['whitelist_hiddenGroups'].'")',
+            '(uid = '. $mainUid . ' or as_uid = '. $mainUid . ') and not find_in_set(usergroup, "'.$mybb->settings['whitelist_hiddenGroups'].'")',
             array('order_by' => 'username')
         );
 
@@ -40,6 +40,7 @@ class whitelistHandler
 
         $postInterval = intval($mybb->settings['whitelist_post']);
         $startDay = intval($mybb->settings['whitelist_dayBegin']);
+        $startDay = intval($mybb->settings['whitelist_dayBegin']);
         $monthInterval = strtotime('-' . $postInterval . ' month');
         $firstXMonthAgo = $startDay . '.' . date('m.Y', $monthInterval);
         $UnixFirstXMonthAgo = strtotime($firstXMonthAgo);
@@ -54,6 +55,21 @@ class whitelistHandler
         while ($row = $db->fetch_array($query)) {
             if (!in_array($row['uid'], $allowedCharacters)) {
                 $allowedCharacters[] = (int)$row['uid'];
+            }
+        }
+
+        // add characters which get a recent wob
+        $wobSetting = intval($mybb->settings['whitelist_wob']);
+        $wobNoPost = intval($mybb->settings['whitelist_wobNoPost']);
+        if ($wobSetting === 1) {
+            $whitelistStartDate = date('Y-m', time()) .'-'. intval($mybb->settings['whitelist_dayBegin']);
+            $date = new DateTime($whitelistStartDate);
+            $date->modify('-'.$wobNoPost.' days');
+            $query2 = $db->simple_select('users', 'uid', 'wobSince > "'.$date->format('Y-m-d').'"');
+            while($row = $db->fetch_array($query2)) {
+                if (!in_array($row['uid'], $allowedCharacters)) {
+                    $allowedCharacters[] = (int)$row['uid'];
+                }
             }
         }
 

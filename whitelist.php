@@ -92,6 +92,11 @@ if ($mybb->user['uid'] != 0) {
     eval("\$form .= \"" . $templates->get("whitelist_form") . "\";");
 }
 
+// show information text when user hasn't characters to set on go or stay
+if (empty($characters)) {
+    $form = $lang->whitelist_no_characters;
+}
+
 $iceTh = $iceTd = '';
 if (intval($mybb->settings['whitelist_ice']) !== -1) {
     eval("\$iceTh = \"" . $templates->get("whitelist_ice_th") . "\";"); 

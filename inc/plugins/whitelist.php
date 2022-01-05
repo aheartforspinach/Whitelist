@@ -18,7 +18,7 @@ function whitelist_info()
         "description"    => "Erstellt automatisch jeden Monat eine Whitelist". $option,
         "author"        => "aheartforspinach",
         "authorsite"    => "https://github.com/aheartforspinach",
-        "version"        => "2.0.2",
+        "version"        => "2.1",
         "compatibility" => "18*"
     );
 }
@@ -30,6 +30,7 @@ function whitelist_install()
     // database
     $db->add_column('users', 'whitelist', 'tinyint not null default 0');
     $db->add_column('users', 'hasSeenWhitelist', 'tinyint not null default 0');
+    $db->add_column('users', 'wobSince', 'date default "0000-00-00"');
 
     // tasks
     $date = new DateTime('01.' . date("m.Y", strtotime('+1 month')));
@@ -169,6 +170,20 @@ function whitelist_install()
             'value' => 1,
             'disporder' => 9
         ),
+        'whitelist_wob' => array(
+            'title' => 'Berücksichtigung WoB-Datum',
+            'description' => 'Soll berücksichtigt werden ab wann der Charakter angenommen ist?',
+            'optionscode' => 'yesno',
+            'value' => 0,
+            'disporder' => 10
+        ),
+        'whitelist_wobNoPost' => array(
+            'title' => 'Schonfrist Annahmedatum',
+            'description' => 'Wie viele Tage dürfen zwischen WoB und Erscheiung der Whitelist, damit der User sich ohne Post streichen darf? (Achtung: hat nur Auswirkung, wenn ein Post verlangt wird zur Streichung)',
+            'optionscode' => 'numeric',
+            'value' => 7,
+            'disporder' => 11
+        ),
     );
 
     foreach ($setting_array as $name => $setting) {
@@ -204,6 +219,9 @@ function whitelist_uninstall()
     if ($db->field_exists('whitelist', 'users'))
         $db->drop_column('users', 'whitelist');
 
+    if ($db->field_exists('wobSince', 'users'))
+        $db->drop_column('users', 'wobSince');
+
     $db->delete_query('tasks', 'file = "whitelist"');
 
     require_once MYBB_ADMIN_DIR."inc/functions_themes.php";
@@ -230,7 +248,9 @@ function whitelist_deactivate()
     find_replace_templatesets("header", "#" . preg_quote('{$header_whitelist}') . "#i", '', 0);
 }
 
+//
 // banner
+//
 $plugins->add_hook('global_intermediate', 'whitelist_alert');
 function whitelist_alert()
 {
@@ -259,20 +279,77 @@ function whitelist_alert()
     }
 }
 
+//
+// admin cp options
+//
+$plugins->add_hook('admin_formcontainer_output_row', 'whitelist_admin_formcontainer_output_row');
+function whitelist_admin_formcontainer_output_row($args) 
+{
+    global $lang, $mybb, $form_container, $form, $db;
+    $lang->load('user_users');
+
+    if ($mybb->get_input('module') == 'user-users' && $lang->user_notes == $args['title']) {
+        $wobDate_day = date('j', TIME_NOW);
+        $wobDate_month = date('m', TIME_NOW);
+        $wobDate_year = date('Y', TIME_NOW);
+        $wob = $db->fetch_field($db->simple_select('users', 'wobSince', 'uid = '. $mybb->get_input('uid', MyBB::INPUT_INT)), 'wobSince');
+        if ($wob != '0000-00-00') {
+            $pieces = explode('-', $wob);
+            $wobDate_day = $pieces[2];
+            $wobDate_month = $pieces[1];
+            $wobDate_year = $pieces[0];
+        }
+
+        $built = $form->generate_numeric_field('wobDate_day', $wobDate_day, array('id' => 'wobDate_day', 'style' => 'width: 100px;', 'min' => 1, 'max' => 31));
+        $built .= $form->generate_numeric_field('wobDate_month', $wobDate_month, array('id' => 'wobDate_month', 'style' => 'width: 100px;', 'min' => 1, 'max' => 12));
+        $built .= $form->generate_numeric_field('wobDate_year', $wobDate_year, array('id' => 'wobDate_year', 'style' => 'width: 100px;', 'min' => 1));
+        $args['content'] .= $form_container->output_row('WoB-Datum', '', $built);
+        return $args;
+    }
+}
+
+$plugins->add_hook('admin_user_users_edit_commit_start', 'whitelist_admin_user_users_edit_commit_start');
+function whitelist_admin_user_users_edit_commit_start()
+{
+	global $mybb, $db;
+
+    $profileUid = $mybb->get_input('uid', MyBB::INPUT_INT);
+    $wobday = $mybb->get_input('wobDate_day', MyBB::INPUT_INT);
+    $wobmonth = $mybb->get_input('wobDate_month', MyBB::INPUT_INT);
+    $wobyear = $mybb->get_input('wobDate_year', MyBB::INPUT_INT);
+	$db->update_query('users', ['wobSince' => $wobyear .'-' . $wobmonth . '-' . $wobday], 'uid = ' . $profileUid);
+}
+
+//
 // update
+//
 $plugins->add_hook('misc_start', 'whitelist_misc_start');
 function whitelist_misc_start()
 {
     global $mybb, $db;
     
     if ($mybb->get_input('action') != 'whitelist-update') {
+        error('Plugin ist auf den aktuellen Stand');
         return;
     }
 
-    if ($db->field_exists('whitelist', 'users')) {
-        error('Plugin wurde bereits geupdatet');
+    // update from 1.0 to 2.0
+    if (!$db->field_exists('whitelist', 'users')) {
+        update1to2();
+        error('Das Plugin wurde von Version 1.0 auf 2.0 geupdatet');
         return;
     }
+
+    // update from 2.0.2 to 2.1
+    if (!$db->field_exists('wobSince', 'users')) {
+        update20to21();
+        error('Das Plugin wurde von Version 2.0.x auf 2.1 geupdatet');
+        return;
+    }
+}
+
+function update1to2() {
+    global $db;
 
     // remove unnecessary settings
     $db->delete_query('settings', "name in ('whitelist_applicant', 'whitelist_fid', 'whitelist_inplay', 'whitelist_archive')");
@@ -294,6 +371,41 @@ function whitelist_misc_start()
 
     // add new templates and css
     addTemplates();
+
+    rebuild_settings();
+}
+
+function update20to21() {
+    global $db;
+    
+    // add database field
+    // $db->add_column('users', 'wobSince', 'date default "0000-00-00"');
+
+    // add new setting option 
+    $newSettings = [
+        'whitelist_wob' => array(
+            'title' => 'Berücksichtigung WoB-Datum',
+            'description' => 'Soll berücksichtigt werden ab wann der Charakter angenommen ist?',
+            'optionscode' => 'yesno',
+            'value' => 0,
+            'disporder' => 10
+        ),
+        'whitelist_wobNoPost' => array(
+            'title' => 'Schonfrist Annahmedatum',
+            'description' => 'Wie viele Tage dürfen zwischen WoB und Erscheiung der Whitelist, damit der User sich ohne Post streichen darf? (Achtung: hat nur Auswirkung, wenn ein Post verlangt wird zur Streichung)',
+            'optionscode' => 'numeric',
+            'value' => 7,
+            'disporder' => 11
+        ),
+    ];
+
+    $gid = $db->fetch_field($db->simple_select('settinggroups', 'gid', 'name = "whitelist"'), 'gid');
+    foreach ($newSettings as $name => $setting) {
+        $setting['name'] = $name;
+        $setting['gid'] = $gid;
+
+        $db->insert_query('settings', $setting);
+    }
 
     rebuild_settings();
 }

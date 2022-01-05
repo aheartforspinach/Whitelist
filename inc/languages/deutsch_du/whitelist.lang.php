@@ -9,6 +9,7 @@ $l['whitelist_away'] = 'Abwesend';
 $l['whitelist_ice'] = 'Auf Eis';
 $l['whitelist_stay_action'] = 'Bleiben';
 $l['whitelist_go_action'] = 'Gehen';
+$l['whitelist_no_characters'] = '<blockquote>Alle deine Charaktere gehören Gruppen an, die von der Whitelist nicht berücksichtigt werden.</blockquote><br>';
 
 // whitelist form
 $l['whitelist_own_characters'] = 'Eigene Charaktere';
