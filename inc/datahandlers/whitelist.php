@@ -65,7 +65,7 @@ class whitelistHandler
             $whitelistStartDate = date('Y-m', time()) .'-'. intval($mybb->settings['whitelist_dayBegin']);
             $date = new DateTime($whitelistStartDate);
             $date->modify('-'.$wobNoPost.' days');
-            $query2 = $db->simple_select('users', 'uid', 'wobSince > "'.$date->format('Y-m-d').'"');
+            $query2 = $db->simple_select('users', 'uid', 'wobSince >= "'.$date->format('Y-m-d').'"');
             while($row = $db->fetch_array($query2)) {
                 if (!in_array($row['uid'], $allowedCharacters)) {
                     $allowedCharacters[] = (int)$row['uid'];
