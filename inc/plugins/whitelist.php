@@ -18,7 +18,7 @@ function whitelist_info()
         "description"    => "Erstellt automatisch jeden Monat eine Whitelist". $option,
         "author"        => "aheartforspinach",
         "authorsite"    => "https://github.com/aheartforspinach",
-        "version"        => "2.1",
+        "version"        => "2.1.1",
         "compatibility" => "18*"
     );
 }
@@ -329,7 +329,6 @@ function whitelist_misc_start()
     global $mybb, $db;
     
     if ($mybb->get_input('action') != 'whitelist-update') {
-        error('Plugin ist auf den aktuellen Stand');
         return;
     }
 
@@ -337,14 +336,12 @@ function whitelist_misc_start()
     if (!$db->field_exists('whitelist', 'users')) {
         update1to2();
         error('Das Plugin wurde von Version 1.0 auf 2.0 geupdatet');
-        return;
     }
 
     // update from 2.0.2 to 2.1
     if (!$db->field_exists('wobSince', 'users')) {
         update20to21();
         error('Das Plugin wurde von Version 2.0.x auf 2.1 geupdatet');
-        return;
     }
 }
 
