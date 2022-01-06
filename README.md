@@ -1,4 +1,4 @@
-# Whitelist 2.0
+# Whitelist 2.1.1
 Das Plugin erstellt an einem spezifisschen Tag eines jeden Monats eine Liste von allen Accounts, wo sich jeder User einzeln für jeden Charakter entscheiden kann, ob er sie behalten möchte oder nicht. Zudem werden abwesende Charaktere herausgefiltert wie auch welche, die auf Eis sind, falls man das möchte. Außerdem wird die Liste zurückgesetzt, so dass jeder User sich jeden Monat neu entscheiden muss.
 
 ## Update
