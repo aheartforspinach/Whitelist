@@ -343,6 +343,8 @@ function whitelist_misc_start()
         update20to21();
         error('Das Plugin wurde von Version 2.0.x auf 2.1 geupdatet');
     }
+
+    error('Das Plugin ist aktuell');
 }
 
 function update1to2() {
