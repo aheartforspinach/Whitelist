@@ -49,7 +49,7 @@ class whitelistHandler
         $query = $db->simple_select(
             'ipt_scenes ips join '.  TABLE_PREFIX .'posts p on ips.tid = p.tid join '.  TABLE_PREFIX .'ipt_scenes_partners ipp on ips.tid = ipp.tid', 
             'ipp.uid',
-            'ipp.uid in ('. implode(',', array_keys($this->characters)) .') and dateline > '. $UnixFirstXMonthAgo,
+            'p.uid in ('. implode(',', array_keys($this->characters)) .') and dateline > '. $UnixFirstXMonthAgo,
             ['order_by' => 'dateline', 'order_dir' => 'desc']
         );
         while ($row = $db->fetch_array($query)) {
