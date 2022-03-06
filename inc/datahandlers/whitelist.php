@@ -7,6 +7,7 @@ global $plugins;
 class whitelistHandler
 {
     private $characters = [];
+    private $allowedCharacters = [];
 
     public function __construct()
     {
@@ -27,6 +28,7 @@ class whitelistHandler
                 'hasSeenWhitelist' => intval($row['hasSeenWhitelist'])
             );
         }
+        $this->allowedCharacters = $this->getAllowedCharacters();
     }
 
     /**
@@ -141,10 +143,9 @@ class whitelistHandler
         $showWhitelistUntil = intval($mybb->settings['whitelist_echo']) + intval($mybb->settings['whitelist_dayBegin']);
         $hiddenGroups = explode(',', $mybb->settings['whitelist_hiddenGroups']);
         $postIsRequired = intval($mybb->settings['whitelist_post']) === -1 ? false : true;
-        $allowedCharacters = $this->getAllowedCharacters();
-
+        
         if (
-            ($postIsRequired && !in_array($uid, $allowedCharacters)) || 
+            ($postIsRequired && !in_array($uid, $this->allowedCharacters)) || 
             date('j', time()) > $showWhitelistUntil || 
             in_array($usergroup, $hiddenGroups)
             ) 
