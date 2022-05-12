@@ -28,7 +28,10 @@ class whitelistHandler
                 'hasSeenWhitelist' => intval($row['hasSeenWhitelist'])
             );
         }
-        $this->allowedCharacters = $this->getAllowedCharacters();
+        
+        if ($db->num_rows($query) > 0) {
+            $this->allowedCharacters = $this->getAllowedCharacters();
+        }
     }
 
     /**

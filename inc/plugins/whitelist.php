@@ -18,7 +18,7 @@ function whitelist_info()
         "description"    => "Erstellt automatisch jeden Monat eine Whitelist". $option,
         "author"        => "aheartforspinach",
         "authorsite"    => "https://github.com/aheartforspinach",
-        "version"        => "2.1.3",
+        "version"        => "2.1.4",
         "compatibility" => "18*"
     );
 }
