@@ -28,9 +28,17 @@ function whitelist_install()
     global $db;
 
     // database
-    $db->add_column('users', 'whitelist', 'tinyint not null default 0');
-    $db->add_column('users', 'hasSeenWhitelist', 'tinyint not null default 0');
-    $db->add_column('users', 'wobSince', 'date default "0000-00-00"');
+    if (!$db->field_exists('whitelist', 'users')) {
+        $db->add_column('users', 'whitelist', 'tinyint not null default 0');
+    }
+
+    if (!$db->field_exists('hasSeenWhitelist', 'users')) {
+        $db->add_column('users', 'hasSeenWhitelist', 'tinyint not null default 0');
+    }
+
+    if (!$db->field_exists('wobSince', 'users')) {
+        $db->add_column('users', 'wobSince', 'date default "0000-00-00"');
+    }
 
     // tasks
     $date = new DateTime('01.' . date("m.Y", strtotime('+1 month')));
@@ -255,21 +263,21 @@ $plugins->add_hook('global_intermediate', 'whitelist_alert');
 function whitelist_alert()
 {
     global $mybb, $templates, $header_whitelist, $lang;
-    require_once 'inc/datahandlers/whitelist.php';
 
     if (!whitelist_is_installed()) return;
+    if ($mybb->user['uid'] === 0) return;
 
     $lang->load('whitelist');
+    require_once 'inc/datahandlers/whitelist.php';
     $whitelistHandler = new whitelistHandler();
-    $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
-    $alertDays = intval($mybb->settings['whitelist_echo']);
-
 
     // hide banner 
-    if ($_POST['seen'] == 1) {
+    if ($mybb->get_input('seen') == 1) {
         $whitelistHandler->hideBanner();
     }
 
+    $dayBegin = intval($mybb->settings['whitelist_dayBegin']);
+    $alertDays = intval($mybb->settings['whitelist_echo']);
     $reactionWhitelist = $whitelistHandler->getReactionWhitelist();
     $hideWhitelist = $reactionWhitelist['hideWhitelist'];
     $echo = $reactionWhitelist['reactToWhitelist'] ? '' : $lang->whitelist_hasnt_react_to_whitelist;
@@ -422,6 +430,7 @@ function addTemplates() {
     $insert_array = array(
         'title'        => 'whitelist',
         'template'    => $db->escape_string('<html xml:lang="de" lang="de" xmlns="http://www.w3.org/1999/xhtml">
+
 <head>
     <title>{$mybb->settings[\'bbname\']} - Whitelist</title>
     {$headerinclude}
@@ -429,36 +438,33 @@ function addTemplates() {
 
 <body>
     {$header}
-    <div class="panel" id="panel">
-        <div id="panel">{$menu}</div>
-        <h1>{$lang->whitelist_heading}{$thisMonth}</h1>
+    <h1>{$lang->whitelist_heading}{$thisMonth}</h1>
 
-        <blockquote>{$lang->whitelist_explanation}</blockquote>
+    <blockquote>{$lang->whitelist_explanation}</blockquote>
 
-        {$form}
+    {$form}
 
-        <table style="width:95%; margin:auto;">
-            <tr>
-                <th width="25%" class="thead">
-                    {$lang->whitelist_stay}
-                </th>
-                <th width="25%" class="thead">
-                    {$lang->whitelist_go}
-                </th>
-                <th width="25%" class="thead">
-                    {$lang->whitelist_away}
-                </th>
-                {$iceTh}
-            </tr>
-            <tr>
-                <td valign="top">{$stay}</td>
-                <td valign="top">{$go}</td>
-                <td valign="top">{$away}</td>
-                {$iceTd}
-            </tr>
-        </table>
+    <table style="width:95%; margin:auto;">
+        <tr>
+            <th width="25%" class="thead">
+                {$lang->whitelist_stay}
+            </th>
+            <th width="25%" class="thead">
+                {$lang->whitelist_go}
+            </th>
+            <th width="25%" class="thead">
+                {$lang->whitelist_away}
+            </th>
+            {$iceTh}
+        </tr>
+        <tr>
+            <td valign="top">{$stay}</td>
+            <td valign="top">{$go}</td>
+            <td valign="top">{$away}</td>
+            {$iceTd}
+        </tr>
+    </table>
 
-    </div>
     {$footer}
 </body>
 

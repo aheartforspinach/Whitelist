@@ -201,7 +201,7 @@ class whitelistHandler
                 'stayOrGo' => $row['whitelist'],
                 'away' => $row['away'],
                 'as_uid' => $row['as_uid'],
-                'ice' => $row['fid'. $fidIce],
+                'ice' => $fidIce == -1 || empty($fidIce) ? null : $row['fid'. $fidIce],
                 'playerName' => $row['fid'. $fidPlayer]
             ];
         }

@@ -49,6 +49,7 @@ foreach ($characters as $uid => $character) {
 }
 
 // generate form for all own characters
+$charactersForm = '';
 foreach ($characters as $uid => $character) {
     $checkedGo = $character['stayOrGo'] === 0 ? 'checked' : '';
     $checkedStay = $character['stayOrGo'] === 1 ? 'checked' : '';
@@ -88,6 +89,7 @@ foreach ($users as $uid => $user) {
     }
 }
 
+$form = '';
 if ($mybb->user['uid'] != 0) {
     eval("\$form .= \"" . $templates->get("whitelist_form") . "\";");
 }
